@@ -1,3 +1,6 @@
+import re
+import time
+
 class User:
     def __init__(self, name, gender, age, weight, height, duration, budget) -> None:
         self.name = name
@@ -13,16 +16,56 @@ class User:
         
     @classmethod
     def get(cls):
-        print("Hello There!")
-        name_input = input("What's your name?: ").capitalize()
-        gender_input = input("Gender (M, F, N): ").upper()
-        age_input = int(input("Age: "))
-        weight_input = float(input("Weight (Kg): "))
-        height_input = float(input("Height (Meters): "))
-        duration_input = int(input("Duration (In Months): "))
-        budget_input = float(input("Budget (USD): "))
-        return cls(name_input, gender_input, age_input, weight_input, height_input, duration_input, budget_input)
-        
+        print_delay("... ", 0.8)
+        print_delay("Hello There! ", 0.4)
+        while True:
+            try:
+                name_input = input("What's your name?: ").capitalize()
+                if not re.match(r'^[A-Za-z]+$', name_input):
+                    raise ValueError("Name is required and must be a string")
+                
+                gender_input = input("Gender (M, F, N): ").capitalize()
+                if not re.search(r"^(M|F|N|Male|Female|None)$", gender_input):
+                    raise ValueError("Invalid gender input")
+                
+                age_input = int(input("Age: "))
+                if age_input not in range(10, 116):
+                    raise ValueError("Invalid age. Fact: Oldest person alive is 116 years old")
+                
+                weight_input = float(input("Weight (Kg): "))
+                if weight_input < 10.0 or weight_input > 150.0:
+                    raise ValueError("Invalid weight. Our test model is not designed yet for weight above 150Kg")
+                
+                height_input = float(input("Height (Meters): "))
+                if height_input < 1.00 or height_input > 2.50:
+                    raise ValueError("Height In Meters. (e.g) '1.75'")
+                
+                duration_input = int(input("Duration (In Months): "))
+                if duration_input not in range(1, 30):
+                    raise ValueError("For Duration greater than 12 months purchase our premium plan.. jk we just dont support that yet")
+                
+                budget_input = float(input("Budget (USD): "))
+                if budget_input < 10.00 or budget_input > 3200.00:
+                    raise ValueError("Budget Most be between 10 USD and 3200 USD")
+                
+                return cls(name_input, gender_input, age_input, weight_input, height_input, duration_input, budget_input)
+            except ValueError as e:                
+                print("Invalid input:", e)
+                # Re-prompt the specific input // Not Working Idk why
+                if "name" in str(e).lower():
+                    continue
+                elif "gender" in str(e).lower():
+                    continue
+                elif "age" in str(e).lower():
+                    continue
+                elif "weight" in str(e).lower():
+                    continue
+                elif "height" in str(e).lower():
+                    continue
+                elif "duration" in str(e).lower():
+                    continue
+                elif "budget" in str(e).lower():
+                    continue
         
     @property
     def name(self):
@@ -38,8 +81,8 @@ class User:
         return self._gender
     @gender.setter
     def gender(self, gender):
-        if gender not in ["M", "F", "N"]:
-            raise ValueError("Invalid gender. M: Male; F: Female; N: Neutral")
+        if gender not in ["M", "F", "N", "Male", "Female", "None"]:
+            raise ValueError("Invalid gender. M: Male; F: Female; N: None")
         self._gender = gender
         
     @property
@@ -88,9 +131,25 @@ class User:
         self._budget = budget
 
 def main():
-    alan = User.get()
-    print(alan)
+    chapi = User.get()
+    menu()
+    option = ("What you want to do? ")
+    match option:
+        case create_diet:
+            create()
+            
     
+def create():
+    ...
+
+def menu():
+    ...
+
+def print_delay(message, delay):
+    for char in message:
+        print(char, end='', flush=True)
+        time.sleep(delay)
+        
 
 if __name__ == "__main__":
     main()
