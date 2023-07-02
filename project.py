@@ -1,5 +1,6 @@
 import re
 import time
+from pyfiglet import Figlet
 
 class User:
     def __init__(self, name, gender, age, weight, height, duration, budget) -> None:
@@ -20,11 +21,11 @@ class User:
         print_delay("Hello There! ", 0.4)
         while True:
             try:
-                name_input = input("What's your name?: ").capitalize()
+                name_input = input("What's your name?: ").strip().capitalize()
                 if not re.match(r'^[A-Za-z]+$', name_input):
                     raise ValueError("Name is required and must be a string")
                 
-                gender_input = input("Gender (M, F, N): ").capitalize()
+                gender_input = input("Gender (M, F, N): ").strip().capitalize()
                 if not re.search(r"^(M|F|N|Male|Female|None)$", gender_input):
                     raise ValueError("Invalid gender input")
                 
@@ -131,25 +132,56 @@ class User:
         self._budget = budget
 
 def main():
+    print(banner("YumBudget"))
     chapi = User.get()
-    menu()
-    option = ("What you want to do? ")
+    option = menu()
     match option:
-        case create_diet:
+        case "create":
             create()
+        case "update":
+            update()
+        case "print":
+            gen()
+        case _:
+            print("Invalid option: Case match")
             
+            
+def menu():
+    options = ["create", "update", "print"]
+    while True:
+        # Fot the future: print graphical menu
+        print(banner("Options", True))
+        print("Create: This will gen a diet based on the chosen duration")
+        print("Update: This allows you to update your info.")
+        print("Print: This will gen a PDF file containing your diet plan")
+        option = input("What you want to do? ").strip().lower()
+        if option in options:
+            return option
+        else:
+            print("Not a valid option: Menu function")
+    
     
 def create():
     ...
 
-def menu():
+def update():
+    ...
+    
+def gen():
     ...
 
 def print_delay(message, delay):
     for char in message:
         print(char, end='', flush=True)
         time.sleep(delay)
-        
+
+def banner(text, sub=None):
+    figlet = Figlet()
+    if sub:
+        figlet.setFont(font="digital")
+    else:
+        figlet.setFont(font="standard")
+    return figlet.renderText(text)
 
 if __name__ == "__main__":
     main()
