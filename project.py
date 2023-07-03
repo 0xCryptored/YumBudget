@@ -62,14 +62,14 @@ class User:
     def calc_bmr(self):
         print_delay(".. Alright! lets get your Basal metabolic rate (BMR)... ", 0.1)
         if self.gender == 'M':
-            value = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) + 5
+            value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) + 5
         else:
-            value = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) -161
+            value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) -161
         print(f"Your BMR is: {value}")
-        time.sleep(1.5)
-        print("=================")
+        time.sleep(3)
+        print("===============================================")
         print(disclaimers["bmr"])
-        print("=================")
+        print("===============================================")
         return value
         
         
