@@ -13,7 +13,7 @@ class User:
         self.tdee = None
     
     def __str__(self):
-        return f"Name: {self.name}\n Gender: {self.gender}\n current weight: {self.weight}Kg\n height:{self.height}\n BMR: {self.bmr}\n TDEE: [Pending...]"
+        return f"Name: {self.name}\n Gender: {self.gender}\n current weight: {self.weight}Kg\n height:{self.height}\n BMR: {self.bmr}\n TDEE: {self.tdee}\n"
         
     @classmethod
     def get(cls):
@@ -60,18 +60,48 @@ class User:
     
     
     def calc_bmr(self):
-        print_delay(".. Alright! lets get your Basal metabolic rate (BMR)... ", 0.1)
+        print_delay(".. Alright! lets get your Basal Metabolic Rate (BMR)...\n", 0.15)
+        print_delay(disclaimers["info_bmr"], 0.1)
         if self.gender == 'M':
             value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) + 5
         else:
             value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) -161
         print(f"Your BMR is: {value}")
         time.sleep(3)
-        print("===============================================")
-        print(disclaimers["bmr"])
-        print("===============================================")
         return value
-        
+
+
+    def calc_tdee(self):
+        print_delay("...loading \n", 0.1)
+        print_delay("...Almost done! now, lets get your Total Daily Energy Expenditure (TDEE) \n", 0.1)
+        print_delay(disclaimers["info_tdee"], 0.1)
+        try:
+            print("1). Sedentary (little to no exercise).")
+            print("2). Lightly active (light exercise/sports 1-3 days/week).")
+            print("3.) Moderately active (moderate exercise/sports 3-5 days/week).")
+            print("4). Very active (hard exercise/sports 6-7 days/week).")
+            print("5). Extra active (very hard exercise/sports and a physical job).")
+            tdee_option = input("Select the number of the described activity level that fits you best: ").strip()
+            if tdee_option not in ["1","2","3","4","5"]:
+                raise ValueError("Error en calc tdee: no en lista.")
+            else:
+                match tdee_option:
+                    case "1":
+                        value = self.bmr * 1.2
+                    case "2":
+                        value = self.bmr * 1.375
+                    case "3":
+                        value = self.bmr * 1.55
+                    case "4":
+                        value = self.bmr * 1.725
+                    case "5":
+                        value = self.bmr * 1.9
+                print(f"Your TDEE is: {value}")
+                time.sleep(3)
+                return value
+        except ValueError as e:
+            sys.exit("Exiting PaleoBudget")
+    
         
     @property
     def name(self):
@@ -156,76 +186,51 @@ class User:
     
 def main():
     print(banner("PaleoBudget"))
+    print("==========================================================================================")
+    print(disclaimers["disc"])
+    print("==========================================================================================")
     chapi = User.get()
     option = menu()
     match option:
-        case "create":
+        case "1":
             create(chapi)
-        case "update":
-            update()
-        case "print":
-            gen()
+        case "2":
+            update(chapi)
+        case "3":
+            gen(chapi)
         case _:
-            print("Invalid option: That one is yet to come")
+            print("Invalid option: That one is yet to come.. ☻")
     print(chapi)
             
             
 def menu():
-    options = ["create", "update", "print"]
+    options = ["1", "2", "3"]
     while True:
         # Fot the future: print graphical menu
-        print(banner("Options", True))
-        print("Create: This will gen a diet based on your profile")
-        print("Update: This allows you to update your info.")
-        print("Print: This will gen a PDF file containing your diet plan")
-        option = input("What you want to do? ").strip().lower()
+        print(banner("menu", True))
+        print("1). Create: This will gen a diet based on your profile")
+        print("2). Update: This allows you to update your info.")
+        print("3). Print: This will gen a PDF file containing your diet plan")
+        option = input("Type the number of your selection: ").strip().lower()
         if option in options:
             return option
         else:
-            print("Only valid options are: Create, Update, and Print.")
+            print("Only valid options are numbers: Create [1], Update [2], and Print [3].")
     
     
 def create(chapi):
     # 100 grams Sources include: FoodData Central  ,USDA
     chapi.bmr = chapi.calc_bmr() 
-    print(chapi)
-    chapi.tdee = calc_tdee(chapi)
-    print("So far so good (y)")
+    chapi.tdee = chapi.calc_tdee()
     snacks = {"orange": 50, "carrot": 50, "celeries": 50}
     breakfast = gen_breakfast()
     lunch = gen_lunch()
     dinner = gen_dinner() 
-
-    def calc_tdee(chapi):
-        print_delay("...loading", 0.15)
-        try:
-            print("1). Sedentary (little to no exercise).")
-            print("2). Lightly active (light exercise/sports 1-3 days/week).")
-            print("3.) Moderately active (moderate exercise/sports 3-5 days/week).")
-            print("4). Very active (hard exercise/sports 6-7 days/week).")
-            print("5). Extra active (very hard exercise/sports and a physical job).")
-            tdee_option = input("Selec the number of the described activity level that fits you best.").strip()
-            if tdee_option not in ["1","2","3","4","5"]:
-                raise ValueError("Error en calc tdee: no en lista.")
-            else:
-                match tdee_option:
-                    case "1":
-                        value = chapi.bmr * 1.2
-                    case "2":
-                        value = chapi.bmr * 1.375
-                    case "3":
-                        value = chapi.bmr * 1.55
-                    case "4":
-                        value = chapi.bmr * 1.725
-                    case "5":
-                        value = chapi.bmr * 1.9
-                return value
-        except ValueError as e:
-            sys.exit("Exiting PaleoBudget")
         
     
     def gen_breakfast():
         break_ingredients = {"eggs": 155, "bacon": 42, "avocado": 160, "coconut oil": 862, "olive oil": 884, "cashews": 553, "hazelnuts": 628, "macadamia nuts": 718, "blueberries": 57,"strawberries": 32, "raspberries": 53, "blackberries": 43, "banana": 96, "apple": 52, "orange": 43, "lemon": 29, "lime": 30, "garlic": 149, "coconut milk": 230, "almond milk": 17, "coconut flour": 480, "almond flour": 576, "coconut butter": 717, "ghee": 900, "coconut aminos": 100, "honey": 304, "maple syrup": 260, "cinnamon": 247,}
+        
         
     def gen_lunch():
         lunch_ingredients = {"salmon": 206, "beef": 250, "chicken": 165, "pork": 242, "turkey": 189, "kale": 49, "broccoli": 34, "cauliflower": 25, "spinach": 23, "carrots": 41, "avocado": 160, "cilantro": 23, "apple cider vinegar": 22, "olive oil": 884, "balsamic vinegar": 88, "red wine vinegar": 17, "arrowroot flour": 357, "sweet potato": 86, "black pepper": 251, "butternut squash": 45, "paprika": 282, "zucchini": 17, "cucumber": 15, "bell pepper": 31, "tomato": 18, "lettuce": 5, "onion": 40, "ginger": 80, "garlic": 149, "turmeric": 312, "celery": 16, "coconut flour": 480, "fish sauce": 29, "almond flour": 576, "coconut butter": 717, "oregano": 265, "basil": 22, "rosemary": 131, "parsley": 36, "nutmeg": 525,}
@@ -245,13 +250,13 @@ def print_delay(message, delay):
 def banner(text, sub=None):
     figlet = Figlet()
     if sub:
-        figlet.setFont(font="digital")
+        figlet.setFont(font="small")
     else:
         figlet.setFont(font="standard")
     return figlet.renderText(text)
 
 
-disclaimers={"bmr": "Disclaimer: please note that these equations provide estimates, and individual variations and considerations should be taken into account. Consulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs. [Working on a BMR for 'gender = None']"}
+disclaimers={"disc": "DISCLAIMER: Please note that these equations (Mifflin-St. Jeor equation) provide estimates, and individual variations and considerations should be taken into account.\nConsulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs.", "info_bmr": "This measures the calories needed to perform your body's most basic (basal) functions while at rest, like breathing, circulation, and cell production.\nIt represents the minimum energy expenditure required to sustain life.\n", "info_tdee": "Is the total number of calories your body needs in a day, taking into account your BMR and the energy expended through physical activity and digestion.\nTDEE considers the calories burned through daily activities, exercise, and the thermic effect of food.\n"}
 
 
 if __name__ == "__main__":
