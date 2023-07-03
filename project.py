@@ -1,24 +1,24 @@
-import re
-import time
+import sys, re, time
 from pyfiglet import Figlet
 
 class User:
-    def __init__(self, name, gender, age, weight, height, duration, budget) -> None:
+    def __init__(self, name, gender, age, weight, height) -> None:
         self.name = name
         self.gender = gender
         self.age = age
         self.weight = weight
         self.height = height
-        self.duration = duration
-        self.budget = budget
+        self.budget = None
+        self.bmr = None
+        self.tdee = None
     
     def __str__(self):
-        return f"{self.name} is on a journey of {self.duration} months with YumBudget! ${self.budget} to spend, current weight: {self.weight}Kg"
+        return f"Name: {self.name}\n Gender: {self.gender}\n current weight: {self.weight}Kg\n height:{self.height}\n BMR: {self.bmr}\n TDEE: [Pending...]"
         
     @classmethod
     def get(cls):
         print_delay("... ", 0.8)
-        print_delay("Hello There! ", 0.4)
+        print_delay("Hello There! ", 0.2)
         while True:
             try:
                 name_input = input("What's your name?: ").strip().capitalize()
@@ -26,8 +26,10 @@ class User:
                     raise ValueError("Name is required and must be a string")
                 
                 gender_input = input("Gender (M, F, N): ").strip().capitalize()
-                if not re.search(r"^(M|F|N|Male|Female|None)$", gender_input):
+                if not re.match(r"^(M(?:ale)?|F(?:emale)?|N(?:one)?)$", gender_input):
                     raise ValueError("Invalid gender input")
+                if len(gender_input) > 1:
+                    gender_input = gender_input[0]
                 
                 age_input = int(input("Age: "))
                 if age_input not in range(10, 116):
@@ -41,15 +43,7 @@ class User:
                 if height_input < 1.00 or height_input > 2.50:
                     raise ValueError("Height In Meters. (e.g) '1.75'")
                 
-                duration_input = int(input("Duration (In Months): "))
-                if duration_input not in range(1, 30):
-                    raise ValueError("For Duration greater than 12 months purchase our premium plan.. jk we just dont support that yet")
-                
-                budget_input = float(input("Budget (USD): "))
-                if budget_input < 10.00 or budget_input > 3200.00:
-                    raise ValueError("Budget Most be between 10 USD and 3200 USD")
-                
-                return cls(name_input, gender_input, age_input, weight_input, height_input, duration_input, budget_input)
+                return cls(name_input, gender_input, age_input, weight_input, height_input)
             except ValueError as e:                
                 print("Invalid input:", e)
                 # Re-prompt the specific input // Not Working Idk why
@@ -63,10 +57,21 @@ class User:
                     continue
                 elif "height" in str(e).lower():
                     continue
-                elif "duration" in str(e).lower():
-                    continue
-                elif "budget" in str(e).lower():
-                    continue
+    
+    
+    def calc_bmr(self):
+        print_delay(".. Alright! lets get your Basal metabolic rate (BMR)... ", 0.1)
+        if self.gender == 'M':
+            value = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) + 5
+        else:
+            value = (10 * self.weight) + (6.25 * self.height) - (5 * self.age) -161
+        print(f"Your BMR is: {value}")
+        time.sleep(1.5)
+        print("=================")
+        print(disclaimers["bmr"])
+        print("=================")
+        return value
+        
         
     @property
     def name(self):
@@ -84,7 +89,10 @@ class User:
     def gender(self, gender):
         if gender not in ["M", "F", "N", "Male", "Female", "None"]:
             raise ValueError("Invalid gender. M: Male; F: Female; N: None")
-        self._gender = gender
+        else:
+            if len(gender) > 1:
+                gender = gender[0]
+            self._gender = gender
         
     @property
     def age(self):
@@ -114,36 +122,52 @@ class User:
         self._height = height
     
     @property
-    def duration(self):
-        return self._duration
-    @duration.setter
-    def duration(self, duration):
-        if duration not in range(1, 30):
-            raise ValueError("Invalid duration. For more than 12 purchase our premium plan.. jk we just dont support that yet")
-        self._duration = duration
-    
-    @property
     def budget(self):
         return self._budget
     @budget.setter
     def budget(self, budget):
-        if budget < 10.00 or budget > 3200.00:
-            raise ValueError("Invalid Budget. Most be between 10 USD and 3200 USD")
-        self._budget = budget
+        if budget:
+            if budget < 10.00 or budget > 3200.00:
+                raise ValueError("Invalid Budget. Most be between 10 USD and 3200 USD")
+        else:
+            self._budget = budget
 
+    @property
+    def bmr(self):
+        return self._bmr
+    @bmr.setter
+    def bmr(self, bmr):
+        if not bmr:
+            self._bmr = None
+        else:
+            self._bmr = bmr
+            
+        
+    @property
+    def tdee(self):
+        return self._tdee
+    @tdee.setter
+    def tdee(self, tdee):
+        if not tdee:
+            self._tdee = None
+        else:
+            self._tdee = tdee
+    
+    
 def main():
-    print(banner("YumBudget"))
+    print(banner("PaleoBudget"))
     chapi = User.get()
     option = menu()
     match option:
         case "create":
-            create()
+            create(chapi)
         case "update":
             update()
         case "print":
             gen()
         case _:
-            print("Invalid option: Case match")
+            print("Invalid option: That one is yet to come")
+    print(chapi)
             
             
 def menu():
@@ -151,29 +175,72 @@ def menu():
     while True:
         # Fot the future: print graphical menu
         print(banner("Options", True))
-        print("Create: This will gen a diet based on the chosen duration")
+        print("Create: This will gen a diet based on your profile")
         print("Update: This allows you to update your info.")
         print("Print: This will gen a PDF file containing your diet plan")
         option = input("What you want to do? ").strip().lower()
         if option in options:
             return option
         else:
-            print("Not a valid option: Menu function")
+            print("Only valid options are: Create, Update, and Print.")
     
     
-def create():
-    ...
+def create(chapi):
+    # 100 grams Sources include: FoodData Central  ,USDA
+    chapi.bmr = chapi.calc_bmr() 
+    print(chapi)
+    chapi.tdee = calc_tdee(chapi)
+    print("So far so good (y)")
+    snacks = {"orange": 50, "carrot": 50, "celeries": 50}
+    breakfast = gen_breakfast()
+    lunch = gen_lunch()
+    dinner = gen_dinner() 
 
-def update():
-    ...
+    def calc_tdee(chapi):
+        print_delay("...loading", 0.15)
+        try:
+            print("1). Sedentary (little to no exercise).")
+            print("2). Lightly active (light exercise/sports 1-3 days/week).")
+            print("3.) Moderately active (moderate exercise/sports 3-5 days/week).")
+            print("4). Very active (hard exercise/sports 6-7 days/week).")
+            print("5). Extra active (very hard exercise/sports and a physical job).")
+            tdee_option = input("Selec the number of the described activity level that fits you best.").strip()
+            if tdee_option not in ["1","2","3","4","5"]:
+                raise ValueError("Error en calc tdee: no en lista.")
+            else:
+                match tdee_option:
+                    case "1":
+                        value = chapi.bmr * 1.2
+                    case "2":
+                        value = chapi.bmr * 1.375
+                    case "3":
+                        value = chapi.bmr * 1.55
+                    case "4":
+                        value = chapi.bmr * 1.725
+                    case "5":
+                        value = chapi.bmr * 1.9
+                return value
+        except ValueError as e:
+            sys.exit("Exiting PaleoBudget")
+        
     
-def gen():
-    ...
+    def gen_breakfast():
+        break_ingredients = {"eggs": 155, "bacon": 42, "avocado": 160, "coconut oil": 862, "olive oil": 884, "cashews": 553, "hazelnuts": 628, "macadamia nuts": 718, "blueberries": 57,"strawberries": 32, "raspberries": 53, "blackberries": 43, "banana": 96, "apple": 52, "orange": 43, "lemon": 29, "lime": 30, "garlic": 149, "coconut milk": 230, "almond milk": 17, "coconut flour": 480, "almond flour": 576, "coconut butter": 717, "ghee": 900, "coconut aminos": 100, "honey": 304, "maple syrup": 260, "cinnamon": 247,}
+        
+    def gen_lunch():
+        lunch_ingredients = {"salmon": 206, "beef": 250, "chicken": 165, "pork": 242, "turkey": 189, "kale": 49, "broccoli": 34, "cauliflower": 25, "spinach": 23, "carrots": 41, "avocado": 160, "cilantro": 23, "apple cider vinegar": 22, "olive oil": 884, "balsamic vinegar": 88, "red wine vinegar": 17, "arrowroot flour": 357, "sweet potato": 86, "black pepper": 251, "butternut squash": 45, "paprika": 282, "zucchini": 17, "cucumber": 15, "bell pepper": 31, "tomato": 18, "lettuce": 5, "onion": 40, "ginger": 80, "garlic": 149, "turmeric": 312, "celery": 16, "coconut flour": 480, "fish sauce": 29, "almond flour": 576, "coconut butter": 717, "oregano": 265, "basil": 22, "rosemary": 131, "parsley": 36, "nutmeg": 525,}
+        ...
+        
+    def gen_dinner():
+        dinner_ingredients = {"salmon": 206, "beef": 250, "chicken": 165, "pork": 242, "turkey": 189, "avocado": 160, "cilantro": 23, "almonds": 579, "walnuts": 654, "olive oil": 884, "butternut squash": 45,}
+        ...
+
 
 def print_delay(message, delay):
     for char in message:
         print(char, end='', flush=True)
         time.sleep(delay)
+
 
 def banner(text, sub=None):
     figlet = Figlet()
@@ -183,6 +250,16 @@ def banner(text, sub=None):
         figlet.setFont(font="standard")
     return figlet.renderText(text)
 
+
+disclaimers={"bmr": "Disclaimer: please note that these equations provide estimates, and individual variations and considerations should be taken into account. Consulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs. [Working on a BMR for 'gender = None']"}
+
+
 if __name__ == "__main__":
     main()
+
     
+def update():
+    ...
+    
+def gen():
+    ...
