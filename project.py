@@ -1,5 +1,6 @@
 import sys, re, time
 import random
+from collections import Counter
 from pyfiglet import Figlet
 
 class User:
@@ -126,7 +127,6 @@ class User:
                     options_menu(self)
                     
     
-    
     def calc_bmr(self):
         print_delay(".. Alright! lets get your Basal Metabolic Rate (BMR)...\n", 0.15)
         print_delay(disclaimers["info_bmr"], 0.1)
@@ -249,15 +249,45 @@ class User:
         else:
             self._tdee = tdee
     
+    @property
+    def breakfast(self):
+        return self._breakfast
+    @breakfast.setter
+    def breakfast(self, breakfast):
+        if not breakfast:
+            self._breakfast = None
+        else:
+            self._breakfast = breakfast
+    
+    @property
+    def lunch(self):
+        return self._lunch
+    @lunch.setter
+    def lunch(self, lunch):
+        if not lunch:
+            self._lunch = None
+        else:
+            self._lunch = lunch
+    
+    @property
+    def dinner(self):
+        return self._dinner
+    @dinner.setter
+    def dinner(self, dinner):
+        if not dinner:
+            self._dinner = None
+        else:
+            self._dinner = dinner
+    
     
 # Notes to self, I will inclue the current object recepits as an attribute within
 def main():
     print(banner("PaleoBudget"))
-    print("================================================================================================================================================================")
+    print("==============================================================================================================================================================")
     print(disclaimers["disc"])
-    print("================================================================================================================================================================")
+    print("==============================================================================================================================================================")
     chapi = User.get()
-    buffer = options_menu(chapi)
+    options_menu(chapi)
             
             
 def options_menu(chapi):
@@ -279,6 +309,7 @@ def options_menu(chapi):
                     return gen(chapi)
                 case "4":
                     print(banner("Cya!", True))
+                    time.sleep(1.5)
                     sys.exit("..Closing program")
         else:
             print("Only valid options are numbers: Create [1], Update [2], Print [3], Exit[4]\n")
@@ -339,6 +370,17 @@ def create(chapi):
                 calories += ingredients[2][buff]
         return dinner_ingredients, calories
     
+    #Synthesized list
+    def syn(list):
+        counter = Counter(list)
+        syn_list = []
+        for item, count in counter.items():
+            if count > 1:
+                syn_list.append(f"{count} {item}s")
+            else:
+                syn_list.append(item)
+        return syn_list
+        
     # 100 grams Sources include: FoodData Central  ,USDA
     chapi.bmr = chapi.calc_bmr() 
     chapi.tdee = chapi.calc_tdee()
@@ -347,11 +389,23 @@ def create(chapi):
     lunch, lunch_calories = gen_lunch(chapi)
     dinner, dinner_calories = gen_dinner(chapi)
     
-    rcpt_breakfast = [breakfast, breakfast_calories]
-    rcpt_lunch = [lunch, lunch_calories]
-    rcpt_dinner = [dinner, dinner_calories]
+    chapi.breakfast = [syn(breakfast), breakfast_calories]
+    chapi.lunch = [syn(lunch), lunch_calories]
+    chapi.dinner = [syn(dinner), dinner_calories]
     
-    return rcpt_breakfast, rcpt_lunch, rcpt_dinner    
+    print_delay("Your dishes have been added to your profile!\n", 0.1)
+    if (ans := input("Wanna take a look before you print? y/n: ")) == "y" or ans == "yes":
+        print(f"For breakfast: {chapi.breakfast[0]} this has {chapi.breakfast[1]} calories in total.")
+        time.sleep(2.5)
+        print(f"For lunch: {chapi.lunch[0]} this has {chapi.lunch[1]} calories in total.")
+        time.sleep(2.5)
+        print(f"Finally for dinner: {chapi.dinner[0]} this has {chapi.dinner[1]} calories in total!")
+        time.sleep(2.5)
+        print(f"All together has {chapi.breakfast[1]+chapi.lunch[1]+chapi.dinner[1]} total calories.")
+        time.sleep(2.5)
+        print("If these didn't sound like Yummy you can create new ones on the main menu!")
+        time.sleep(1.5)
+    options_menu(chapi)
 
 
 def gen():
