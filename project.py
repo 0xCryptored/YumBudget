@@ -1,4 +1,5 @@
 import sys, re, time
+import random
 from pyfiglet import Figlet
 
 class User:
@@ -11,6 +12,10 @@ class User:
         self.budget = None
         self.bmr = None
         self.tdee = None
+        self.breakfast = None
+        self.lunch = None
+        self.dinner = None
+        
     
     def __str__(self):
         return f"Name: {self.name}\n Gender: {self.gender}\n current weight: {self.weight}Kg\n height:{self.height}\n BMR: {self.bmr}\n TDEE: {self.tdee}\n"
@@ -59,6 +64,69 @@ class User:
                     continue
     
     
+    def update(self):
+        print("Which attribute would you like to update?\n")
+        while True:
+            print("[1] Name")
+            print("[2] Gender")
+            print("[3] Age")
+            print("[4] Weight")
+            print("[5] Height")
+            print("[6] Back to menu\n")
+            att = input("Type the number of your selection: ").strip().lower()
+            matches = re.match(r"^(?:'name'|'gender'|'age'|'weight'|'height'|\d{1,6})$", att, re.IGNORECASE)
+            if matches:
+                try:
+                    if att in ["1", "name"]:
+                        print(f"Current name: '{self.name}'")
+                        if new := input("Type new name: "):
+                            self.name = new
+                            print(f"Your name is now: '{self.name}'\n")
+                        else:
+                            raise ValueError("Input is empty")
+
+                    elif att in ["2", "gender"]: 
+                        print(f"Current gender: {self.gender}")
+                        if new := input("Type new gender [Male, Female, None]: "):
+                            self.gender = new
+                            print(f"{self.name}'s gender is now: {self.gender}\n")
+                        else:
+                            raise ValueError("Input is empty")
+
+                    elif att in ["3", "age"]: 
+                        print(f"Current age: {self.age}") 
+                        if new := int(input("Type new age: ")):
+                            self.age = new
+                            print(f"{self.name}'s age is now: {self.age}\n")
+                        else:
+                            raise ValueError("Input is empty")
+
+                    elif att in ["4", "weight"]:
+                        print(f"Current weight: {self.weight}")
+                        if new := float(input("Type new weight: ")):
+                            self.weight = new
+                            print(f"{self.name}'s weight is now: {self.weight}")
+                        else:
+                            raise ValueError("Input is empty")
+
+                    elif att in ["5", "height"]:
+                        print(f"Current height: {self.height}")
+                        if new := float(input("Type new height: ")):
+                            self.height = new
+                            print(f"{self.name}'s height is now: {self.height}")
+                        else:
+                            raise ValueError("Input is empty")
+                        
+                    else:
+                        options_menu(self)
+                    
+                        
+                except ValueError as e:
+                    print("An error has ocurred: ", e)
+                    options_menu(self)
+                    
+    
+    
     def calc_bmr(self):
         print_delay(".. Alright! lets get your Basal Metabolic Rate (BMR)...\n", 0.15)
         print_delay(disclaimers["info_bmr"], 0.1)
@@ -66,21 +134,20 @@ class User:
             value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) + 5
         else:
             value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) -161
-        print(f"Your BMR is: {value}")
+        print(f"Your BMR is: {value}\n")
         time.sleep(3)
         return value
 
 
     def calc_tdee(self):
-        print_delay("...loading \n", 0.1)
         print_delay("...Almost done! now, lets get your Total Daily Energy Expenditure (TDEE) \n", 0.1)
         print_delay(disclaimers["info_tdee"], 0.1)
         try:
-            print("1). Sedentary (little to no exercise).")
-            print("2). Lightly active (light exercise/sports 1-3 days/week).")
-            print("3.) Moderately active (moderate exercise/sports 3-5 days/week).")
-            print("4). Very active (hard exercise/sports 6-7 days/week).")
-            print("5). Extra active (very hard exercise/sports and a physical job).")
+            print("[1] Sedentary (little to no exercise).")
+            print("[2] Lightly active (light exercise/sports 1-3 days/week).")
+            print("[3] Moderately active (moderate exercise/sports 3-5 days/week).")
+            print("[4] Very active (hard exercise/sports 6-7 days/week).")
+            print("[5] Extra active (very hard exercise/sports and a physical job).\n")
             tdee_option = input("Select the number of the described activity level that fits you best: ").strip()
             if tdee_option not in ["1","2","3","4","5"]:
                 raise ValueError("Error en calc tdee: no en lista.")
@@ -96,7 +163,7 @@ class User:
                         value = self.bmr * 1.725
                     case "5":
                         value = self.bmr * 1.9
-                print(f"Your TDEE is: {value}")
+                print(f"Your TDEE is: {value}\n")
                 time.sleep(3)
                 return value
         except ValueError as e:
@@ -108,8 +175,8 @@ class User:
         return self._name
     @name.setter
     def name(self, name):
-        if not name:
-            raise ValueError("Invalid name.")
+        if not re.match(r'^[A-Za-z]+$', name):
+            raise ValueError("Invalid name. Name is required and must be a string")
         self._name = name
         
     @property
@@ -117,7 +184,7 @@ class User:
         return self._gender
     @gender.setter
     def gender(self, gender):
-        if gender not in ["M", "F", "N", "Male", "Female", "None"]:
+        if not re.match(r"^(M(?:ale)?|F(?:emale)?|N(?:one)?)$", gender):
             raise ValueError("Invalid gender. M: Male; F: Female; N: None")
         else:
             if len(gender) > 1:
@@ -172,7 +239,6 @@ class User:
         else:
             self._bmr = bmr
             
-        
     @property
     def tdee(self):
         return self._tdee
@@ -184,68 +250,118 @@ class User:
             self._tdee = tdee
     
     
+# Notes to self, I will inclue the current object recepits as an attribute within
 def main():
     print(banner("PaleoBudget"))
-    print("==========================================================================================")
+    print("================================================================================================================================================================")
     print(disclaimers["disc"])
-    print("==========================================================================================")
+    print("================================================================================================================================================================")
     chapi = User.get()
-    option = menu()
-    match option:
-        case "1":
-            create(chapi)
-        case "2":
-            update(chapi)
-        case "3":
-            gen(chapi)
-        case _:
-            print("Invalid option: That one is yet to come.. ☻")
-    print(chapi)
+    buffer = options_menu(chapi)
             
             
-def menu():
-    options = ["1", "2", "3"]
+def options_menu(chapi):
+    options = ["1", "2", "3", "4"]
     while True:
-        # Fot the future: print graphical menu
         print(banner("menu", True))
-        print("1). Create: This will gen a diet based on your profile")
-        print("2). Update: This allows you to update your info.")
-        print("3). Print: This will gen a PDF file containing your diet plan")
+        print("[1] Create: This will gen a diet based on your profile")
+        print("[2] Update: This allows you to update your info.")
+        print("[3] Print: This will gen a PDF file containing your diet plan")
+        print("[4] Exit: This will exit the program\n")
         option = input("Type the number of your selection: ").strip().lower()
         if option in options:
-            return option
+            match option:
+                case "1":
+                    return create(chapi)
+                case "2":
+                    chapi.update()
+                case "3":
+                    return gen(chapi)
+                case "4":
+                    print(banner("Cya!", True))
+                    sys.exit("..Closing program")
         else:
-            print("Only valid options are numbers: Create [1], Update [2], and Print [3].")
+            print("Only valid options are numbers: Create [1], Update [2], Print [3], Exit[4]\n")
     
     
 def create(chapi):
+    # Dict Groups 1:Protein; 2:Oils; 3:Additionals; 4:Beverages; 5:Spices;
+    def gen_breakfast(chapi):
+        # Calories percentage: 25%
+        ingredients = [{"salmon":120, "boiled-egg":140, "fried-egg":196, "bacon":42}, {"coconut-oil":117, "olive-oil":119}, {"cashews":55, "hazelnuts":62, "blueberries":57,"strawberries":32, "raspberries":53, "blackberries":43, "banana":96, "apple":52, "orange":43, "lemon":29, "sweet-potato":70, "avocado":160}, {"coconut-water":45, "almond-milk":40, "water":0, "coffe-latte":12}, {"coconut-butter":50, "honey":64, "maple-syrup":26, "cinnamon":3, "chia-seeds":48}]
+        max_calories = round(chapi.tdee * 0.25) # 587 Calories
+        calories = 0
+        breakfast_ingredients = []
+        while calories <= max_calories:
+            for i in range(len(ingredients)):
+                buff = random.choice(list(ingredients[i].keys()))
+                breakfast_ingredients.append(buff)
+                calories += ingredients[i][buff]
+            while calories <= max_calories:
+                buff = random.choice(list(ingredients[2].keys()))
+                breakfast_ingredients.append(buff)
+                calories += ingredients[2][buff]
+        return breakfast_ingredients, calories     
+        
+    # Dict Groups 1:Protein; 2:Oils; 3:Additionals; 4:Beverages; 5:Spices;
+    def gen_lunch(chapi):
+        # Calories percentage: 40%
+        ingredients = [{"salmon":104, "beef":125, "chicken":120, "pork":121, "turkey":95}, {"coconut-oil":117, "olive-oil":119}, {"kale": 49, "broccoli":34, "cauliflower":25, "spinach":23, "carrots":41, "avocado":80, "cilantro":23, "balsamic vinegar":88, "red wine vinegar":17, "arrowroot":35, "sweet potato":70, "zucchini":17, "cucumber":15, "bell-pepper":31, "tomato":18, "lettuce":5, "onion":40, "ginger":30, "celery":16}, {"water":0, "soft-drink":41, "apple-juice":46}, {"garlic":14, "paprika":10, "black-pepper":15, "oregano":10, "basil":22, "fish sauce":29,  "rosemary":13, "parsley":36, "nutmeg":11}]
+        max_calories = round(chapi.tdee * 0.35) # 823
+        calories = 0
+        lunch_ingredients = []
+        while calories <= max_calories:
+            for i in range(len(ingredients)):
+                buff = random.choice(list(ingredients[i].keys()))
+                lunch_ingredients.append(buff)
+                calories += ingredients[i][buff]
+            while calories <= max_calories:
+                buff = random.choice(list(ingredients[2].keys()))
+                lunch_ingredients.append(buff)
+                calories += ingredients[2][buff]
+        return lunch_ingredients, calories    
+        
+    # Dict Groups 1:Protein; 2:Oils; 3:Additionals; 4:Beverages; 5:Spices;   
+    def gen_dinner(chapi):
+        # Calories percentage: 35%
+        ingredients = [{"salmon":281, "chicken":200, "turkey":95, "shrimp":143}, {"olive oil":119, "coconut-oil": 117},{"avocado":120, "bell-pepper":15, "zucchini":13, "broccoli":26, "cauliflower":20, "snap-peas":29, "sweet-potato":112}, {"lemon-juice":4, "water":0, }, {"rosemary":4, "thyme":5, "basil":1, "garlic":5, "paprika":14, "dill":2}]
+        max_calories = round(chapi.tdee * 0.30) # 705
+        calories = 0
+        dinner_ingredients = []
+        while calories <= max_calories:
+            for i in range(len(ingredients)):
+                buff = random.choice(list(ingredients[i].keys()))
+                dinner_ingredients.append(buff)
+                calories += ingredients[i][buff]
+            while calories <= max_calories:
+                buff = random.choice(list(ingredients[2].keys()))
+                dinner_ingredients.append(buff)
+                calories += ingredients[2][buff]
+        return dinner_ingredients, calories
+    
     # 100 grams Sources include: FoodData Central  ,USDA
     chapi.bmr = chapi.calc_bmr() 
     chapi.tdee = chapi.calc_tdee()
-    snacks = {"orange": 50, "carrot": 50, "celeries": 50}
-    breakfast = gen_breakfast()
-    lunch = gen_lunch()
-    dinner = gen_dinner() 
-        
     
-    def gen_breakfast():
-        break_ingredients = {"eggs": 155, "bacon": 42, "avocado": 160, "coconut oil": 862, "olive oil": 884, "cashews": 553, "hazelnuts": 628, "macadamia nuts": 718, "blueberries": 57,"strawberries": 32, "raspberries": 53, "blackberries": 43, "banana": 96, "apple": 52, "orange": 43, "lemon": 29, "lime": 30, "garlic": 149, "coconut milk": 230, "almond milk": 17, "coconut flour": 480, "almond flour": 576, "coconut butter": 717, "ghee": 900, "coconut aminos": 100, "honey": 304, "maple syrup": 260, "cinnamon": 247,}
-        
-        
-    def gen_lunch():
-        lunch_ingredients = {"salmon": 206, "beef": 250, "chicken": 165, "pork": 242, "turkey": 189, "kale": 49, "broccoli": 34, "cauliflower": 25, "spinach": 23, "carrots": 41, "avocado": 160, "cilantro": 23, "apple cider vinegar": 22, "olive oil": 884, "balsamic vinegar": 88, "red wine vinegar": 17, "arrowroot flour": 357, "sweet potato": 86, "black pepper": 251, "butternut squash": 45, "paprika": 282, "zucchini": 17, "cucumber": 15, "bell pepper": 31, "tomato": 18, "lettuce": 5, "onion": 40, "ginger": 80, "garlic": 149, "turmeric": 312, "celery": 16, "coconut flour": 480, "fish sauce": 29, "almond flour": 576, "coconut butter": 717, "oregano": 265, "basil": 22, "rosemary": 131, "parsley": 36, "nutmeg": 525,}
-        ...
-        
-    def gen_dinner():
-        dinner_ingredients = {"salmon": 206, "beef": 250, "chicken": 165, "pork": 242, "turkey": 189, "avocado": 160, "cilantro": 23, "almonds": 579, "walnuts": 654, "olive oil": 884, "butternut squash": 45,}
-        ...
+    breakfast, breakfast_calories = gen_breakfast(chapi)
+    lunch, lunch_calories = gen_lunch(chapi)
+    dinner, dinner_calories = gen_dinner(chapi)
+    
+    rcpt_breakfast = [breakfast, breakfast_calories]
+    rcpt_lunch = [lunch, lunch_calories]
+    rcpt_dinner = [dinner, dinner_calories]
+    
+    return rcpt_breakfast, rcpt_lunch, rcpt_dinner    
+
+
+def gen():
+    ...
 
 
 def print_delay(message, delay):
     for char in message:
         print(char, end='', flush=True)
         time.sleep(delay)
-
 
 def banner(text, sub=None):
     figlet = Figlet()
@@ -255,16 +371,10 @@ def banner(text, sub=None):
         figlet.setFont(font="standard")
     return figlet.renderText(text)
 
-
-disclaimers={"disc": "DISCLAIMER: Please note that these equations (Mifflin-St. Jeor equation) provide estimates, and individual variations and considerations should be taken into account.\nConsulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs.", "info_bmr": "This measures the calories needed to perform your body's most basic (basal) functions while at rest, like breathing, circulation, and cell production.\nIt represents the minimum energy expenditure required to sustain life.\n", "info_tdee": "Is the total number of calories your body needs in a day, taking into account your BMR and the energy expended through physical activity and digestion.\nTDEE considers the calories burned through daily activities, exercise, and the thermic effect of food.\n"}
+disclaimers={"disc": "DISCLAIMER: Please note that these equations (Mifflin-St. Jeor equation) provide estimates, and individual variations and considerations should be taken into account.\nConsulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs.", "info_bmr": "This measures the calories needed to perform your body's most basic (basal) functions while at rest, like breathing, circulation, and cell production.\nIt represents the minimum energy expenditure required to sustain life.\n\n", "info_tdee": "Is the total number of calories your body needs in a day, taking into account your BMR and the energy expended through physical activity and digestion.\nTDEE considers the calories burned through daily activities, exercise, and the thermic effect of food.\n\n"}
 
 
 if __name__ == "__main__":
     main()
 
     
-def update():
-    ...
-    
-def gen():
-    ...
