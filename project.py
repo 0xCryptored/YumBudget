@@ -1,6 +1,6 @@
-import sys, re, time
-import random
+import sys, re, time, random
 from collections import Counter
+from fpdf import FPDF
 from pyfiglet import Figlet
 
 class User:
@@ -129,7 +129,6 @@ class User:
     
     def calc_bmr(self):
         print_delay(".. Alright! lets get your Basal Metabolic Rate (BMR)...\n", 0.15)
-        print_delay(disclaimers["info_bmr"], 0.1)
         if self.gender == 'M':
             value = (10 * self.weight) + (6.25 * (self.height * 100)) - (5 * self.age) + 5
         else:
@@ -141,7 +140,6 @@ class User:
 
     def calc_tdee(self):
         print_delay("...Almost done! now, lets get your Total Daily Energy Expenditure (TDEE) \n", 0.1)
-        print_delay(disclaimers["info_tdee"], 0.1)
         try:
             print("[1] Sedentary (little to no exercise).")
             print("[2] Lightly active (light exercise/sports 1-3 days/week).")
@@ -278,13 +276,91 @@ class User:
             self._dinner = None
         else:
             self._dinner = dinner
-    
+
+class PDF(FPDF):
+    def header(self):
+        # Rendering logo:
+        self.image("Yum(1).png", 80, 8, 50)
+        # Setting font: helvetica bold 15
+        self.set_font("helvetica", "B", 15)
+        # Moving cursor to the right:
+        self.cell(80)
+        # Performing a line break:
+        self.ln(50)
+        
+    def footer(self):
+        # Position cursor at 1.5 cm from bottom:
+        self.set_y(-15)
+        # Setting font: helvetica italic 8
+        self.set_font("helvetica", "I", 8)
+        # Printing page number:
+        self.cell(0, 10, f"Page {self.page_no()}/{{nb}}", align="C")
+
+    def chapter_title(self, label):
+        # Setting font: helvetica 12
+        self.set_font("helvetica", "", 13)
+        # Setting background color
+        self.set_fill_color(253, 130, 114)
+        # Printing chapter name:
+        self.cell(
+            0,
+            6,
+            f"{label}:",
+            new_x="LMARGIN",
+            new_y="NEXT",
+            align="L",
+            fill=True,
+        )
+        # Performing a line break:
+        self.ln(4)
+
+    def chapter_body(self, filepath):
+        # Reading text file:
+        with open(filepath, "rb") as fh:
+            txt = fh.read().decode("latin-1")
+        # Setting font: Times 12
+        self.set_font("Times", size=12)
+        # Printing justified text:
+        self.multi_cell(0, 5, txt)
+        # Performing a line break:
+        self.ln()
+        
+    def meal_title(self, label):
+        # Setting font: helvetica 12
+        self.set_font("helvetica", "", 12)
+        # Setting background color
+        self.set_fill_color(253, 130, 114)
+        # Printing chapter name:
+        self.cell(
+            0,
+            8,
+            f"{label}:",
+            new_x="LMARGIN",
+            new_y="NEXT",
+            align="C",
+            fill=True,
+        )
+        # Performing a line break:
+        self.ln(3)
+
+    def meal_body(self, txt):
+        # Setting font: Times 12
+        self.set_font("Times", size=12)
+        # Printing justified text:
+        self.multi_cell(0, 5, txt)
+        # Performing a line break:
+        self.ln()
+
+
+    def print_chapter(self, title, filepath):
+        self.chapter_title(title)
+        self.chapter_body(filepath)
     
 # Notes to self, I will inclue the current object recepits as an attribute within
 def main():
     print(banner("PaleoBudget"))
     print("==============================================================================================================================================================")
-    print(disclaimers["disc"])
+    print(disclaimer)
     print("==============================================================================================================================================================")
     chapi = User.get()
     options_menu(chapi)
@@ -306,7 +382,7 @@ def options_menu(chapi):
                 case "2":
                     chapi.update()
                 case "3":
-                    return gen(chapi)
+                    gen(chapi)
                 case "4":
                     print(banner("Cya!", True))
                     time.sleep(1.5)
@@ -395,21 +471,63 @@ def create(chapi):
     
     print_delay("Your dishes have been added to your profile!\n", 0.1)
     if (ans := input("Wanna take a look before you print? y/n: ")) == "y" or ans == "yes":
-        print(f"For breakfast: {chapi.breakfast[0]} this has {chapi.breakfast[1]} calories in total.")
+        print(f"For breakfast: {chapi.breakfast[0]} this has {chapi.breakfast[1]} calories in total.\n")
         time.sleep(2.5)
-        print(f"For lunch: {chapi.lunch[0]} this has {chapi.lunch[1]} calories in total.")
+        print(f"For lunch: {chapi.lunch[0]} this has {chapi.lunch[1]} calories in total.\n")
         time.sleep(2.5)
-        print(f"Finally for dinner: {chapi.dinner[0]} this has {chapi.dinner[1]} calories in total!")
+        print(f"Finally for dinner: {chapi.dinner[0]} this has {chapi.dinner[1]} calories in total!\n")
         time.sleep(2.5)
-        print(f"All together has {chapi.breakfast[1]+chapi.lunch[1]+chapi.dinner[1]} total calories.")
+        print(f"All together has {chapi.breakfast[1]+chapi.lunch[1]+chapi.dinner[1]} total calories.\n")
         time.sleep(2.5)
-        print("If these didn't sound like Yummy you can create new ones on the main menu!")
+        print("If these didn't sound like Yummy you can create new ones on the main menu!\n")
         time.sleep(1.5)
     options_menu(chapi)
 
 
-def gen():
-    ...
+def gen(chapi):
+    pdf = PDF()
+    pdf.add_page()
+    pdf.print_chapter(f"WHAT IS BMR? {chapi.name}'s BMR: {chapi.bmr}", "bmr.txt")
+    pdf.print_chapter(f"WHAT IS TDEE? {chapi.name}'s TDEE: {chapi.tdee}", "tdee.txt")
+    # BREAKFAST
+    pdf.meal_title("BREAKFAST")
+    pdf.set_font("Times", size=12)
+    pdf.cell(
+        0,
+        6,
+        f"25% of the daily calories intake have been assigned to your breakfast",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
+    pdf.meal_body(f"Your ingredients: {chapi.breakfast[0]}, with {chapi.breakfast[1]} total calories")
+    # LUNCH
+    pdf.meal_title("LUNCH")
+    pdf.cell(
+        0,
+        6,
+        f"40% of the daily calories intake have been assigned to your lunch",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
+    pdf.meal_body(f"Your ingredients: {chapi.lunch[0]}, with {chapi.lunch[1]} total calories")
+    # DINNER
+    pdf.meal_title("DINNER")
+    pdf.cell(
+        0,
+        6,
+        f"35% of the daily calories intake have been assigned to your dinner",
+        new_x="LMARGIN",
+        new_y="NEXT",
+        align="C",
+    )
+    pdf.meal_body(f"Your ingredients: {chapi.dinner[0]}, with {chapi.dinner[1]} total calories")  
+    
+    pdf.output("PaleoBudget.pdf")
+    print(banner("Printed!", True))
+    time.sleep(3)
+    options_menu(chapi)
 
 
 def print_delay(message, delay):
@@ -425,7 +543,7 @@ def banner(text, sub=None):
         figlet.setFont(font="standard")
     return figlet.renderText(text)
 
-disclaimers={"disc": "DISCLAIMER: Please note that these equations (Mifflin-St. Jeor equation) provide estimates, and individual variations and considerations should be taken into account.\nConsulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs.", "info_bmr": "This measures the calories needed to perform your body's most basic (basal) functions while at rest, like breathing, circulation, and cell production.\nIt represents the minimum energy expenditure required to sustain life.\n\n", "info_tdee": "Is the total number of calories your body needs in a day, taking into account your BMR and the energy expended through physical activity and digestion.\nTDEE considers the calories burned through daily activities, exercise, and the thermic effect of food.\n\n"}
+disclaimer = "DISCLAIMER: Please note that these equations (Mifflin-St. Jeor equation) provide estimates, and individual variations and considerations should be taken into account.\nConsulting a healthcare professional or a registered dietitian is recommended to get personalized and accurate advice on calorie intake and dietary needs."
 
 
 if __name__ == "__main__":
