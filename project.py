@@ -333,7 +333,7 @@ class PDF(FPDF):
         # Printing chapter name:
         self.cell(
             0,
-            8,
+            6,
             f"{label}:",
             new_x="LMARGIN",
             new_y="NEXT",
@@ -347,7 +347,7 @@ class PDF(FPDF):
         # Setting font: Times 12
         self.set_font("Times", size=12)
         # Printing justified text:
-        self.multi_cell(0, 5, txt)
+        self.multi_cell(0, 5, txt, align='C')
         # Performing a line break:
         self.ln()
 
@@ -372,7 +372,7 @@ def options_menu(chapi):
         print(banner("menu", True))
         print("[1] Create: This will gen a diet based on your profile")
         print("[2] Update: This allows you to update your info.")
-        print("[3] Print: This will gen a PDF file containing your diet plan")
+        print("[3] Print: This will gen a PDF file containing your diet ingredients")
         print("[4] Exit: This will exit the program\n")
         option = input("Type the number of your selection: ").strip().lower()
         if option in options:
@@ -395,7 +395,7 @@ def create(chapi):
     # Dict Groups 1:Protein; 2:Oils; 3:Additionals; 4:Beverages; 5:Spices;
     def gen_breakfast(chapi):
         # Calories percentage: 25%
-        ingredients = [{"salmon":120, "boiled-egg":140, "fried-egg":196, "bacon":42}, {"coconut-oil":117, "olive-oil":119}, {"cashews":55, "hazelnuts":62, "blueberries":57,"strawberries":32, "raspberries":53, "blackberries":43, "banana":96, "apple":52, "orange":43, "lemon":29, "sweet-potato":70, "avocado":160}, {"coconut-water":45, "almond-milk":40, "water":0, "coffe-latte":12}, {"coconut-butter":50, "honey":64, "maple-syrup":26, "cinnamon":3, "chia-seeds":48}]
+        ingredients = [{"salmon":120, "boiled egg":140, "fried egg":196, "bacon":42}, {"coconut oil":117, "olive oil":119}, {"cashews":55, "hazelnuts":62, "blueberries":57,"strawberries":32, "raspberries":53, "blackberries":43, "banana":96, "apple":52, "orange":43, "lemon":29, "sweet potato":70, "avocado":160}, {"coconut water":45, "almond milk":40, "water":0, "coffe latte":12}, {"coconut butter":50, "honey":64, "maple syrup":26, "cinnamon":3, "chia seeds":48}]
         max_calories = round(chapi.tdee * 0.25) # 587 Calories
         calories = 0
         breakfast_ingredients = []
@@ -413,7 +413,7 @@ def create(chapi):
     # Dict Groups 1:Protein; 2:Oils; 3:Additionals; 4:Beverages; 5:Spices;
     def gen_lunch(chapi):
         # Calories percentage: 40%
-        ingredients = [{"salmon":104, "beef":125, "chicken":120, "pork":121, "turkey":95}, {"coconut-oil":117, "olive-oil":119}, {"kale": 49, "broccoli":34, "cauliflower":25, "spinach":23, "carrots":41, "avocado":80, "cilantro":23, "balsamic vinegar":88, "red wine vinegar":17, "arrowroot":35, "sweet potato":70, "zucchini":17, "cucumber":15, "bell-pepper":31, "tomato":18, "lettuce":5, "onion":40, "ginger":30, "celery":16}, {"water":0, "soft-drink":41, "apple-juice":46}, {"garlic":14, "paprika":10, "black-pepper":15, "oregano":10, "basil":22, "fish sauce":29,  "rosemary":13, "parsley":36, "nutmeg":11}]
+        ingredients = [{"salmon":104, "beef":125, "chicken":120, "pork":121, "turkey":95}, {"coconut oil":117, "olive oil":119}, {"kale": 49, "broccoli":34, "cauliflower":25, "spinach":23, "carrots":41, "avocado":80, "cilantro":23, "balsamic vinegar":88, "red wine vinegar":17, "arrowroot":35, "sweet potato":70, "zucchini":17, "cucumber":15, "bell pepper":31, "tomato":18, "lettuce":5, "onion":40, "ginger":30, "celery":16}, {"water":0, "soft drink":41, "apple juice":46}, {"garlic":14, "paprika":10, "black pepper":15, "oregano":10, "basil":22, "fish sauce":29,  "rosemary":13, "parsley":36, "nutmeg":11}]
         max_calories = round(chapi.tdee * 0.35) # 823
         calories = 0
         lunch_ingredients = []
@@ -431,7 +431,7 @@ def create(chapi):
     # Dict Groups 1:Protein; 2:Oils; 3:Additionals; 4:Beverages; 5:Spices;   
     def gen_dinner(chapi):
         # Calories percentage: 35%
-        ingredients = [{"salmon":281, "chicken":200, "turkey":95, "shrimp":143}, {"olive oil":119, "coconut-oil": 117},{"avocado":120, "bell-pepper":15, "zucchini":13, "broccoli":26, "cauliflower":20, "snap-peas":29, "sweet-potato":112}, {"lemon-juice":4, "water":0, }, {"rosemary":4, "thyme":5, "basil":1, "garlic":5, "paprika":14, "dill":2}]
+        ingredients = [{"salmon":281, "chicken":200, "turkey":95, "shrimp":143}, {"olive oil":119, "coconut oil": 117},{"avocado":120, "bell pepper":15, "zucchini":13, "broccoli":26, "cauliflower":20, "snap peas":29, "sweet potato":112}, {"lemon juice":4, "water":0, }, {"rosemary":4, "thyme":5, "basil":1, "garlic":5, "paprika":14, "dill":2}]
         max_calories = round(chapi.tdee * 0.30) # 705
         calories = 0
         dinner_ingredients = []
@@ -492,37 +492,31 @@ def gen(chapi):
     # BREAKFAST
     pdf.meal_title("BREAKFAST")
     pdf.set_font("Times", size=12)
-    pdf.cell(
-        0,
-        6,
-        f"25% of the daily calories intake have been assigned to your breakfast",
-        new_x="LMARGIN",
-        new_y="NEXT",
-        align="C",
-    )
-    pdf.meal_body(f"Your ingredients: {chapi.breakfast[0]}, with {chapi.breakfast[1]} total calories")
+    pdf.cell(0, 6, f"25% of the daily calories intake have been assigned to your breakfast", new_x="LMARGIN", new_y="NEXT", align="C",)
+    ing_str = ', '.join(chapi.breakfast[0])
+    pdf.meal_body(f"Your ingredients: {ing_str}")
+    pdf.cell(0, 6, f"Total amount of calories: {chapi.breakfast[1]}", new_x="LMARGIN", new_y="NEXT", align="C",)
+    pdf.ln(3)
+    
     # LUNCH
     pdf.meal_title("LUNCH")
-    pdf.cell(
-        0,
-        6,
-        f"40% of the daily calories intake have been assigned to your lunch",
-        new_x="LMARGIN",
-        new_y="NEXT",
-        align="C",
-    )
-    pdf.meal_body(f"Your ingredients: {chapi.lunch[0]}, with {chapi.lunch[1]} total calories")
+    pdf.set_font("Times", size=12)
+    pdf.cell(0, 6, f"40% of the daily calories intake have been assigned to your lunch", new_x="LMARGIN", new_y="NEXT", align="C",)
+    ing_str = ', '.join(chapi.lunch[0])
+    pdf.meal_body(f"Your ingredients: {ing_str}")
+    pdf.cell(0, 6, f"Total amount of calories: {chapi.lunch[1]}", new_x="LMARGIN", new_y="NEXT", align="C",)
+    pdf.ln(3)
+    
     # DINNER
     pdf.meal_title("DINNER")
-    pdf.cell(
-        0,
-        6,
-        f"35% of the daily calories intake have been assigned to your dinner",
-        new_x="LMARGIN",
-        new_y="NEXT",
-        align="C",
-    )
-    pdf.meal_body(f"Your ingredients: {chapi.dinner[0]}, with {chapi.dinner[1]} total calories")  
+    pdf.set_font("Times", size=12)
+    pdf.cell(0, 6, f"35% of the daily calories intake have been assigned to your dinner", new_x="LMARGIN", new_y="NEXT", align="C")
+    ing_str = ', '.join(chapi.dinner[0])
+    pdf.meal_body(f"Your ingredients: {ing_str}")  
+    pdf.cell(0, 6, f"Total amount of calories: {chapi.dinner[1]}", new_x="LMARGIN", new_y="NEXT", align="C",)
+    pdf.ln(6)
+    
+    pdf.meal_title(f"All together for a total amount of {chapi.breakfast[1] + chapi.lunch[1] + chapi.dinner[1]}")
     
     pdf.output("PaleoBudget.pdf")
     print(banner("Printed!", True))
